@@ -19,7 +19,7 @@ const users = require("./json/users.json");
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function (email) {
-  return pool.query('SELECT * FROM users WHERE email = $1',[email])
+  return pool.query('SELECT * FROM users WHERE email = $1', [email])
     .then(data => {
       return data.rows[0]
     })
@@ -36,13 +36,13 @@ const getUserWithEmail = function (email) {
  */
 const getUserWithId = function (id) {
   return pool.query('SELECT * FROM users WHERE id = $1', [id])
-  .then(data => {
-    return data.rows[0];
-  })
-  .catch(error => {
-    console.error('Error fetching user:', error);
-    throw error;
-  });
+    .then(data => {
+      return data.rows[0];
+    })
+    .catch(error => {
+      console.error('Error fetching user:', error);
+      throw error;
+    });
 };
 
 /**
@@ -51,17 +51,17 @@ const getUserWithId = function (id) {
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser = function (user) {
- const { name, email, password } = user;
- const query = 'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *';
+  const { name, email, password } = user;
+  const query = 'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *';
 
- return pool.query(query, [name, email, password])
-   .then(data => {
-    return data.rows[0];
-   })
-   .catch(error => {
-    console.error('Error adding user:', error);
-    throw error;
-   });
+  return pool.query(query, [name, email, password])
+    .then(data => {
+      return data.rows[0];
+    })
+    .catch(error => {
+      console.error('Error adding user:', error);
+      throw error;
+    });
 };
 
 /// Reservations
@@ -94,14 +94,14 @@ const getAllReservations = function (guest_id, limit = 10) {
     reservations.start_date
   LIMIT $2;`;
 
-return pool.query(query, [guest_id, limit])
-  .then(data => {
-    return data.rows;
-  })
-  .catch(error => {
-    console.error('Error fetching reservations:', error);
-    throw error;
-  });
+  return pool.query(query, [guest_id, limit])
+    .then(data => {
+      return data.rows;
+    })
+    .catch(error => {
+      console.error('Error fetching reservations:', error);
+      throw error;
+    });
 };
 
 /// Properties
@@ -119,43 +119,44 @@ const getAllProperties = (options, limit = 10) => {
   SELECT properties.*, avg(property_reviews.rating) AS average_rating
   FROM properties
   JOIN property_reviews ON properties.id = property_id
+  WHERE 1 = 1
   `;
 
   if (options.city) {
     queryParams.push(`%${options.city}%`);
-    queryString += `WHERE city LIKE $${queryParams.length}`;
+    queryString += `AND city LIKE $${queryParams.length}\n`;
   }
 
-  if(options.owner_id) {
+  if (options.owner_id) {
     queryParams.push(options.owner_id);
-    queryString += `AND owner_id = $${queryParams.length} `;
+    queryString += `AND owner_id = $${queryParams.length}\n`;
   }
 
   if (options.minimum_price_per_night) {
     queryParams.push(options.minimum_price_per_night * 100);
-    queryString += `AND cost_per_night >= $${queryParams.length} `;
+    queryString += `AND cost_per_night >= $${queryParams.length}\n`;
   }
 
   if (options.maximum_price_per_night) {
     queryParams.push(options.maximum_price_per_night * 100);
-    queryString += `AND cost_per_night <= $${queryParams.length} `;
+    queryString += `AND cost_per_night <= $${queryParams.length}\n`;
   }
+
+  queryString += `GROUP BY properties.id \n`
 
   if (options.minimum_rating) {
     queryParams.push(options.minimum_rating);
-    queryString += `AND property_reviews.rating >= $${queryParams.length} `;
+    queryString += `HAVING avg(rating) >= $${queryParams.length}\n`;
   }
 
   queryParams.push(limit);
   queryString += `
-  GROUP BY properties.id
   ORDER BY cost_per_night
   LIMIT $${queryParams.length};
   `;
 
-
   return pool.query(queryString, queryParams)
-    .then ((res) => res.rows)
+    .then((res) => res.rows)
     .catch(error => {
       console.error('Error fetching properties:', error);
       throw error;
