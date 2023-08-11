@@ -6,4 +6,4 @@ A simple multi-page Airbnb clone that uses a server-side Javascript to display t
 
 URL page | URL page 2
 :-------:|:---------:
-![url-page]() | ![url-page2]()
+![url-page](https://github.com/ftennisco/lightbnb/blob/main/docs/URL_page.png?raw=true) | ![url-page2](https://github.com/ftennisco/lightbnb/blob/main/docs/URL_page2.png?raw=true)
